@@ -25,14 +25,32 @@ function CollapsibleTree() {
 
   return (
     <div ref={wrapperRef} className="collapsible-tree-wrapper">
-      {data && (
-        <CollapsibleTreeContent width={size.width} height={size.height} />
-      )}
+      <CollapsibleTreeContent width={size.width} height={size.height} />
     </div>
   );
 }
 
 function App() {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    (async () => {
+      const response = await fetch("data/flare.csv");
+      const data = d3.csvParse(await response.text());
+      for (const item of data) {
+        const segments = item.id.split(".");
+        item.name = segments[segments.length - 1];
+        item.parentId = segments.slice(0, -1).join(".") || null;
+        item.value = Number(item.value) || null;
+      }
+      const stratify = d3.stratify();
+      setData(stratify(data));
+    })();
+  }, []);
+  console.log(data);
+  if (data) {
+    console.log(d3.hierarchy(data));
+  }
+
   return (
     <div>
       <CollapsibleTree />
