@@ -1,11 +1,49 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 
-function CollapsibleTreeContent({ width, height }) {
+function CollapsibleTreeContent({ width, height, data }) {
+  const margin = { top: 50, right: 250, bottom: 50, left: 50 };
+  const [collapsed, setCollapsed] = useState({});
+  useEffect(() => {
+    const newCollapsed = {};
+    for (const item of data) {
+      newCollapsed[item.id] = item.depth >= 2;
+    }
+    setCollapsed(newCollapsed);
+  }, [data]);
+
+  const [nodes, links] = useMemo(() => {
+    const stratify = d3.stratify();
+    const root = d3.hierarchy(stratify(data), (item) => {
+      return collapsed[item.id] ? null : item.children;
+    });
+    const tree = d3
+      .tree()
+      .size([
+        height - margin.top - margin.bottom,
+        width - margin.left - margin.right,
+      ]);
+    tree(root);
+    const nodes = root.descendants().map((item) => {
+      return { ...item.data.data, x: item.y, y: item.x };
+    });
+    const nodeIndices = {};
+    nodes.forEach((node, i) => {
+      nodeIndices[node.id] = i;
+    });
+    const links = root.links().map(({ source, target }) => {
+      return {
+        source: nodeIndices[source.data.data.id],
+        target: nodeIndices[target.data.data.id],
+      };
+    });
+    return [nodes, links];
+  }, [data, width, height, margin, collapsed]);
+
   return <div></div>;
 }
 
-function CollapsibleTree() {
+function CollapsibleTree({ data }) {
   const wrapperRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -25,7 +63,13 @@ function CollapsibleTree() {
 
   return (
     <div ref={wrapperRef} className="collapsible-tree-wrapper">
-      <CollapsibleTreeContent width={size.width} height={size.height} />
+      {data && (
+        <CollapsibleTreeContent
+          width={size.width}
+          height={size.height}
+          data={data}
+        />
+      )}
     </div>
   );
 }
@@ -43,17 +87,24 @@ function App() {
         item.value = Number(item.value) || null;
       }
       const stratify = d3.stratify();
-      setData(stratify(data));
+      setData(
+        stratify(data)
+          .descendants()
+          .map((item) => {
+            return {
+              ...item.data,
+              height: item.height,
+              depth: item.depth,
+              childCount: item.children?.length || 0,
+            };
+          })
+      );
     })();
   }, []);
-  console.log(data);
-  if (data) {
-    console.log(d3.hierarchy(data));
-  }
 
   return (
     <div>
-      <CollapsibleTree />
+      <CollapsibleTree data={data} />
     </div>
   );
 }
