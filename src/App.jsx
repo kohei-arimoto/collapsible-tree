@@ -42,7 +42,7 @@ function CollapsibleTreeContent({ width, height, data }) {
 
   return (
     <div>
-      <svg width={width} height={height}>
+      <svg className="collapsible-tree" width={width} height={height}>
         <g transform={`translate(${margin.left},${margin.top})`}>
           <g>
             {links.map((link) => {
@@ -60,14 +60,51 @@ function CollapsibleTreeContent({ width, height, data }) {
                 target.x
               } ${target.y}`;
               return (
-                <g>
+                <g
+                  key={`${nodes[link.source].id}:${nodes[link.target].id}`}
+                  className="link"
+                >
                   <path d={pathShape} fill="none" stroke="#aaaaaa" />
                 </g>
               );
             })}
           </g>
+          <g>
+            {nodes.map((node) => {
+              return (
+                <g
+                  key={node.id}
+                  className={node.childCount > 0 ? "clickable node" : "node"}
+                  transform={`translate(${node.x},${node.y})`}
+                  onClick={() => {
+                    setCollapsed({
+                      ...collapsed,
+                      [node.id]: !collapsed[node.id],
+                    });
+                  }}
+                >
+                  <circle
+                    r="3"
+                    fill={
+                      collapsed[node.id] && node.childCount > 0
+                        ? "#d45b87"
+                        : "#aaaaaa"
+                    }
+                  />
+                  <text
+                    x="8"
+                    textAnchor="start"
+                    dominantBaseline="central"
+                    fontSize="10"
+                    transform="rotate(-30)"
+                  >
+                    {node.name}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
         </g>
-        <g>{nodes.forEach(() => {})}</g>
       </svg>
     </div>
   );
