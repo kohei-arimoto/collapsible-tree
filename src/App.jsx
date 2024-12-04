@@ -40,7 +40,37 @@ function CollapsibleTreeContent({ width, height, data }) {
     return [nodes, links];
   }, [data, width, height, margin, collapsed]);
 
-  return <div></div>;
+  return (
+    <div>
+      <svg width={width} height={height}>
+        <g transform={`translate(${margin.left},${margin.top})`}>
+          <g>
+            {links.map((link) => {
+              const source = {
+                x: nodes[link.source].x,
+                y: nodes[link.source].y,
+              };
+              const target = {
+                x: nodes[link.target].x,
+                y: nodes[link.target].y,
+              };
+              const pathShape = `M ${source.x} ${source.y} C ${
+                (source.x + target.x) / 2
+              } ${source.y}, ${(source.x + target.x) / 2} ${target.y}, ${
+                target.x
+              } ${target.y}`;
+              return (
+                <g>
+                  <path d={pathShape} fill="none" stroke="#aaaaaa" />
+                </g>
+              );
+            })}
+          </g>
+        </g>
+        <g>{nodes.forEach(() => {})}</g>
+      </svg>
+    </div>
+  );
 }
 
 function CollapsibleTree({ data }) {
